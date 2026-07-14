@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KKSOM Grants Dashboard · FY2016–2026</title>
+<meta name="description" content="Kirk Kerkorian School of Medicine at UNLV — grants submitted and awarded by fiscal year, 2016–2026. Research grant activity dashboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F4F5F6;
+    --card:#FFFFFF;
+    --ink:#1B1D20;
+    --ink-soft:#5E656C;
+    --ink-faint:#8C9298;
+    --scarlet:#A03123;      /* UNLV Scarlet Dark — Awarded / primary accent */
+    --scarlet-deep:#822619; /* deeper brick for emphasis */
+    --scarlet-wash:#F5E4E1;
+    --slate:#9FA1A4;        /* UNLV Gray — Submitted */
+    --slate-soft:#C4C6C8;   /* UNLV Gray, lightened */
+    --slate-wash:#ECEDED;
+    --gold:#E31837;         /* UNLV Scarlet (bright) — ARPA / outlier flag */
+    --line:#E2E4E7;
+    --line-soft:#EDEEF0;
+    --ok:#1F7A54;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(25,28,34,.05), 0 8px 24px -14px rgba(25,28,34,.22);
+    --mono-num:"Inter";
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-feature-settings:"tnum" 1,"cv05" 1;
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px 72px;}
+
+  /* ---------- Masthead ---------- */
+  header.mast{padding:44px 0 26px;border-bottom:1px solid var(--line);}
+  .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--scarlet);display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--scarlet);}
+  .eyebrow .sub{color:var(--ink-faint);}
+  h1{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;
+    font-size:clamp(30px,4.6vw,52px);line-height:1.04;letter-spacing:-.01em;
+    margin:14px 0 6px;color:var(--ink);
+  }
+  h1 em{font-style:normal;color:var(--scarlet);}
+  h1 .amp{font-family:"Inter",sans-serif;font-weight:400;color:var(--ink-faint);font-size:.62em;vertical-align:.06em;padding:0 .06em;}
+  .mast .lede{font-size:16px;color:var(--ink-soft);max-width:60ch;margin:0;}
+  .mast-row{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;flex-wrap:wrap;}
+  .updated{font-size:12.5px;color:var(--ink-faint);white-space:nowrap;}
+  .updated b{color:var(--ink-soft);font-weight:600;}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;
+    margin:26px 0 8px;padding:18px 20px;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  }
+  .ctl{display:flex;flex-direction:column;gap:7px;}
+  .ctl > label,.ctl .lab{
+    font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+  }
+  .seg{display:inline-flex;background:var(--slate-wash);border-radius:10px;padding:3px;gap:2px;}
+  .seg button{
+    border:0;background:transparent;cursor:pointer;font-family:inherit;
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);
+    padding:8px 16px;border-radius:8px;transition:.16s;white-space:nowrap;
+  }
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);}
+  .seg button:focus-visible{outline:2px solid var(--scarlet);outline-offset:2px;}
+  select{
+    font-family:inherit;font-size:14px;font-weight:500;color:var(--ink);
+    padding:8px 30px 8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;
+    appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%235C6675' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  select:focus-visible{outline:2px solid var(--scarlet);outline-offset:1px;}
+  .range-pair{display:flex;align-items:center;gap:8px;}
+  .range-pair span{color:var(--ink-faint);font-size:13px;}
+  .check{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--ink-soft);cursor:pointer;user-select:none;}
+  .check input{width:16px;height:16px;accent-color:var(--scarlet);cursor:pointer;}
+  .spacer{flex:1;}
+  .reset{
+    border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;
+  }
+  .reset:hover{border-color:var(--slate-soft);color:var(--ink);}
+  .reset:focus-visible{outline:2px solid var(--scarlet);outline-offset:2px;}
+
+  /* ---------- KPI strip ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:20px 0 24px;}
+  .kpi{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 18px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .kpi .k-lab{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;}
+  .kpi .k-val{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(24px,3vw,33px);line-height:1;letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .kpi .k-val.sm{font-size:clamp(20px,2.4vw,27px);}
+  .kpi .k-sub{font-size:12px;color:var(--ink-soft);margin-top:7px;}
+  .kpi.awd{background:linear-gradient(180deg,#fff, #fff);}
+  .kpi.awd .k-val{color:var(--scarlet-deep);}
+  .kpi .tick{position:absolute;top:0;left:0;height:3px;width:100%;}
+  .kpi.sub .tick{background:var(--slate);}
+  .kpi.awd .tick{background:var(--scarlet);}
+  .kpi.rate .tick{background:linear-gradient(90deg,var(--slate),var(--scarlet));}
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 24px 20px;margin-bottom:22px;
+  }
+  .p-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:4px;}
+  .p-title{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:20px;letter-spacing:-.01em;margin:0;}
+  .p-note{font-size:12.5px;color:var(--ink-faint);}
+  .legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+  .legend .li{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--ink-soft);cursor:pointer;user-select:none;}
+  .legend .sw{width:12px;height:12px;border-radius:3px;}
+  .legend .li.off{opacity:.4;text-decoration:line-through;}
+  .chart-box{position:relative;height:340px;margin-top:14px;}
+  .chart-box.tall{height:360px;}
+  .two-up{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .two-up .chart-box{height:290px;}
+
+  .arpa-flag{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    color:var(--gold);background:#FBEAE7;border:1px solid #EFCDC7;padding:3px 9px;border-radius:20px;
+  }
+  .arpa-flag .d{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto;margin-top:12px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:640px;}
+  th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line-soft);white-space:nowrap;}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);}
+  thead th{
+    font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);
+    cursor:pointer;user-select:none;border-bottom:1.5px solid var(--line);white-space:nowrap;
+  }
+  thead th:hover{color:var(--ink);}
+  thead th .ar{color:var(--ink-faint);font-size:10px;}
+  tbody tr:hover{background:var(--slate-wash);}
+  tbody td b{font-weight:600;}
+  tbody tr.arpa td:first-child::after{content:"ARPA";font-size:9px;font-weight:700;color:var(--gold);background:#FBEAE7;padding:1px 5px;border-radius:8px;margin-left:8px;vertical-align:middle;}
+  tfoot td{font-weight:700;border-top:1.5px solid var(--line);border-bottom:none;color:var(--ink);padding-top:13px;}
+  .pct-cell{color:var(--ink-soft);}
+  .bar-mini{display:inline-block;height:7px;border-radius:4px;vertical-align:middle;margin-left:8px;}
+
+  /* ---------- Notes ---------- */
+  .notes{margin-top:6px;font-size:13px;color:var(--ink-soft);}
+  .notes h3{font-family:"Fraunces",serif;font-size:16px;font-weight:600;color:var(--ink);margin:0 0 10px;}
+  .notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;}
+  .notes li::marker{color:var(--scarlet);}
+  .notes .formula{
+    display:inline-block;font-weight:600;color:var(--scarlet-deep);
+    background:var(--scarlet-wash);border:1px solid #EBD3CE;
+    padding:1px 9px;border-radius:6px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .notes .eg{color:var(--ink-faint);font-style:normal;font-variant-numeric:tabular-nums;}
+  footer.foot{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:920px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .two-up{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 16px 56px;}
+    .kpis{grid-template-columns:1fr 1fr;gap:10px;}
+    .controls{gap:14px 18px;}
+    .mast-row{align-items:flex-start;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="mast">
+    <div class="mast-row">
+      <div>
+        <div class="eyebrow">
+          <span class="dot"></span>Kirk Kerkorian School of Medicine at UNLV
+          <span class="sub">· Office of Research</span>
+        </div>
+        <h1>Grants <em>Submitted</em> <span class="amp">&amp;</span> <em>Awarded</em></h1>
+        <p class="lede">Research proposal activity and funding outcomes across eleven fiscal years, 2016&ndash;2026.</p>
+      </div>
+      <div class="updated">Last updated<br><b>July 14, 2026</b></div>
+    </div>
+  </header>
+
+  <!-- ============ CONTROLS ============ -->
+  <div class="controls" role="region" aria-label="Dashboard controls">
+    <div class="ctl">
+      <span class="lab" id="metricLab">Measure</span>
+      <div class="seg" role="group" aria-labelledby="metricLab">
+        <button id="mCount" aria-pressed="true">Grant count</button>
+        <button id="mDollar" aria-pressed="false">Dollars</button>
+      </div>
+    </div>
+
+    <div class="ctl">
+      <span class="lab">Fiscal year range</span>
+      <div class="range-pair">
+        <select id="fromFY" aria-label="From fiscal year"></select>
+        <span>to</span>
+        <select id="toFY" aria-label="To fiscal year"></select>
+      </div>
+    </div>
+
+    <div class="ctl" id="logCtl" style="display:none;">
+      <span class="lab">Scale</span>
+      <label class="check"><input type="checkbox" id="logScale"> Log scale <span style="color:var(--ink-faint);font-weight:400;">(tame the FY22 spike)</span></label>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="reset" id="resetBtn">Reset view</button>
+  </div>
+
+  <!-- ============ KPI STRIP ============ -->
+  <section class="kpis" id="kpis" aria-label="Summary metrics"></section>
+
+  <!-- ============ MAIN CHART ============ -->
+  <section class="panel">
+    <div class="p-head">
+      <div>
+        <h2 class="p-title" id="mainTitle">Proposals submitted vs. awarded</h2>
+        <div class="legend" id="mainLegend">
+          <span class="li" data-ds="0"><span class="sw" style="background:var(--slate)"></span><span id="lgSub">Submitted</span></span>
+          <span class="li" data-ds="1"><span class="sw" style="background:var(--scarlet)"></span><span id="lgAwd">Awarded</span></span>
+        </div>
+      </div>
+      <span class="arpa-flag"><span class="d"></span>FY22 spike = ARPA proposals</span>
+    </div>
+    <div class="chart-box tall"><canvas id="mainChart"></canvas></div>
+  </section>
+
+  <!-- ============ TWO-UP ============ -->
+  <div class="two-up">
+    <section class="panel">
+      <div class="p-head">
+        <h2 class="p-title">Conversion rate</h2>
+        <span class="p-note">awarded &divide; submitted</span>
+      </div>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:var(--slate)"></span>Award rate (count)</span>
+        <span class="li"><span class="sw" style="background:var(--scarlet)"></span>Funding success ($)</span>
+      </div>
+      <div class="chart-box"><canvas id="rateChart"></canvas></div>
+    </section>
+
+    <section class="panel">
+      <div class="p-head">
+        <h2 class="p-title" id="cumTitle">Cumulative awarded</h2>
+        <span class="p-note">running total over the range</span>
+      </div>
+      <div class="chart-box" style="margin-top:34px"><canvas id="cumChart"></canvas></div>
+    </section>
+  </div>
+
+  <!-- ============ DATA TABLE ============ -->
+  <section class="panel">
+    <div class="p-head">
+      <h2 class="p-title">Full data</h2>
+      <span class="p-note">click a column heading to sort</span>
+    </div>
+    <div class="table-wrap">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th data-key="fy">Fiscal year <span class="ar">&#9660;</span></th>
+            <th data-key="sub">Submitted</th>
+            <th data-key="awd">Awarded</th>
+            <th data-key="rate">Award rate</th>
+            <th data-key="reqD">$ Requested</th>
+            <th data-key="awdD">$ Awarded</th>
+            <th data-key="frate">$ Success</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ NOTES ============ -->
+  <section class="panel notes">
+    <h3>Methodology &amp; notes</h3>
+    <ul>
+      <li><b>Award rate (count)</b> &mdash; the share of proposals that were funded, calculated as
+        <span class="formula">grants awarded &divide; proposals submitted</span>.
+        It is computed per fiscal year in the trend chart, and as a pooled total (awards &divide; submissions) for the selected range in the summary card.
+        <span class="eg">e.g. FY26: 46 &divide; 70 = 66%.</span></li>
+      <li><b>Funding success (dollars)</b> &mdash; the share of requested dollars that were awarded, calculated as
+        <span class="formula">$ awarded &divide; $ requested</span>.
+        Likewise computed per fiscal year in the trend chart, and pooled across the selected range in the summary card.
+        <span class="eg">e.g. FY24: $9.06M &divide; $10.74M = 84%.</span></li>
+      <li>Both rates use each fiscal year's own submissions and awards. Because a grant is often <b>awarded in a later year than it was submitted</b>, a single year's dollars or awards may trace back to earlier proposals &mdash; so annual rates show the funding climate of that year, not the exact yield of that year's applications.</li>
+      <li>Figures encompass total grant proposals and awards, <b>including clinical trials</b>.</li>
+      <li>The elevated FY22 activity &mdash; particularly the <b>$196.0M requested</b> &mdash; is largely attributable to <b>ARPA</b> proposals and awards received that year.</li>
+      <li>A prior revision noted that FY25 reflected only the first quarter (July&ndash;September); current figures are as of the last-updated date above.</li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <span>Kirk Kerkorian School of Medicine at UNLV &middot; Office of Research</span>
+    <span>Interactive dashboard &middot; FY2016&ndash;FY2026</span>
+  </footer>
+</div>
+
+<script>
+/* ============================ DATA ============================ */
+const DATA = [
+  { fy:'FY16', sub:1,  awd:0,  reqD:2794835,   awdD:0,        arpa:false },
+  { fy:'FY17', sub:7,  awd:2,  reqD:1260558,   awdD:25598,    arpa:false },
+  { fy:'FY18', sub:20, awd:13, reqD:8022066,   awdD:2905416,  arpa:false },
+  { fy:'FY19', sub:31, awd:28, reqD:13330774,  awdD:10420603, arpa:false },
+  { fy:'FY20', sub:30, awd:22, reqD:11696946,  awdD:7747799,  arpa:false },
+  { fy:'FY21', sub:20, awd:12, reqD:6831994,   awdD:2217483,  arpa:false },
+  { fy:'FY22', sub:66, awd:19, reqD:195998350, awdD:8009069,  arpa:true  },
+  { fy:'FY23', sub:31, awd:26, reqD:19257856,  awdD:9881759,  arpa:false },
+  { fy:'FY24', sub:28, awd:25, reqD:10737101,  awdD:9060864,  arpa:false },
+  { fy:'FY25', sub:46, awd:33, reqD:27821654,  awdD:14247572, arpa:false },
+  { fy:'FY26', sub:70, awd:46, reqD:48492899,  awdD:13322715, arpa:false },
+];
+
+const C = {
+  slate:'#9FA1A4', slateSoft:'#C4C6C8', scarlet:'#A03123', scarletDeep:'#822619',
+  ink:'#1B1D20', inkSoft:'#5E656C', inkFaint:'#8C9298', line:'#E2E4E7', gold:'#E31837'
+};
+
+/* ============================ STATE ============================ */
+const state = {
+  metric:'count',           // 'count' | 'dollar'
+  from:0, to:DATA.length-1, // index range
+  log:false,
+  hidden:{0:false,1:false}, // main chart series visibility
+  sortKey:'fy', sortDir:1
+};
+
+/* ============================ HELPERS ============================ */
+const fmtInt = n => n.toLocaleString('en-US');
+const fmtPct = n => (n*100).toFixed(n>0&&n<0.01?1:0)+'%';
+function fmtUSD(n){
+  if(n>=1e6) return '$'+(n/1e6).toFixed(n>=1e7?1:2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+fmtInt(n);
+}
+function fmtUSDfull(n){ return '$'+fmtInt(n); }
+const sub = a => DATA.slice(state.from, state.to+1);
+const isDollar = () => state.metric==='dollar';
+
+/* ============================ CHART SETUP ============================ */
+Chart.defaults.font.family = "'Inter',system-ui,sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = C.inkSoft;
+
+const tooltipCfg = (dollar) => ({
+  backgroundColor:'#191C22', padding:12, cornerRadius:9, displayColors:true,
+  boxPadding:5, titleFont:{weight:'600',size:13}, bodyFont:{size:12.5},
+  callbacks:{
+    label:(ctx)=>{
+      const v = ctx.parsed.y;
+      const name = ctx.dataset.label;
+      return dollar ? `  ${name}: ${fmtUSDfull(v)}` : `  ${name}: ${fmtInt(v)}`;
+    }
+  }
+});
+
+let mainChart, rateChart, cumChart;
+
+function buildMain(){
+  const rows = sub();
+  const dollar = isDollar();
+  const labels = rows.map(r=>r.fy);
+  const subVals = rows.map(r=> dollar ? r.reqD : r.sub);
+  const awdVals = rows.map(r=> dollar ? r.awdD : r.awd);
+
+  // For log scale, 0 -> null so Chart.js can plot the rest
+  const mapLog = arr => (state.log && dollar) ? arr.map(v=> v>0? v : null) : arr;
+
+  const subBorder = rows.map(r=> r.arpa ? C.gold : 'transparent');
+  const awdBorder = rows.map(r=> r.arpa ? C.gold : 'transparent');
+
+  const cfg = {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label: dollar?'Requested':'Submitted', data: mapLog(subVals),
+        backgroundColor:C.slate, borderColor:subBorder, borderWidth:{top:2,left:0,right:0,bottom:0},
+        borderRadius:5, hidden:state.hidden[0], maxBarThickness:46 },
+      { label: dollar?'Awarded':'Awarded', data: mapLog(awdVals),
+        backgroundColor:C.scarlet, borderColor:awdBorder, borderWidth:{top:2,left:0,right:0,bottom:0},
+        borderRadius:5, hidden:state.hidden[1], maxBarThickness:46 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:tooltipCfg(dollar) },
+      scales:{
+        x:{ grid:{display:false}, border:{color:C.line}, ticks:{color:C.inkSoft,font:{weight:'600'}} },
+        y:{ type:(state.log&&dollar)?'logarithmic':'linear', beginAtZero:!(state.log&&dollar),
+          grid:{color:'#EEF1F5'}, border:{display:false},
+          ticks:{ color:C.inkFaint, callback:v=> dollar? fmtUSD(v) : fmtInt(v) } }
+      },
+      animation:{duration:520, easing:'easeOutQuart'}
+    }
+  };
+  if(mainChart){ mainChart.destroy(); }
+  mainChart = new Chart(document.getElementById('mainChart'), cfg);
+}
+
+function buildRate(){
+  const rows = sub();
+  const labels = rows.map(r=>r.fy);
+  const awardRate = rows.map(r=> r.sub? r.awd/r.sub : 0);
+  const fundRate  = rows.map(r=> r.reqD? r.awdD/r.reqD : 0);
+  const cfg = {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Award rate (count)', data:awardRate, borderColor:C.slate, backgroundColor:C.slate,
+        tension:.32, borderWidth:2.5, pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#fff', pointBorderWidth:2 },
+      { label:'Funding success ($)', data:fundRate, borderColor:C.scarlet, backgroundColor:C.scarlet,
+        tension:.32, borderWidth:2.5, pointRadius:3, pointHoverRadius:5, pointBackgroundColor:'#fff', pointBorderWidth:2, borderDash:[5,3] },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false},
+        tooltip:{ backgroundColor:'#191C22',padding:11,cornerRadius:9,boxPadding:4,
+          titleFont:{weight:'600'}, callbacks:{ label:c=>`  ${c.dataset.label}: ${(c.parsed.y*100).toFixed(1)}%` } } },
+      scales:{
+        x:{ grid:{display:false}, border:{color:C.line}, ticks:{color:C.inkSoft,font:{weight:'600'}} },
+        y:{ beginAtZero:true, max:1, grid:{color:'#EEF1F5'}, border:{display:false},
+          ticks:{ color:C.inkFaint, stepSize:.25, callback:v=>(v*100)+'%' } }
+      },
+      animation:{duration:520}
+    }
+  };
+  if(rateChart){rateChart.destroy();}
+  rateChart = new Chart(document.getElementById('rateChart'), cfg);
+}
+
+function buildCum(){
+  const rows = sub();
+  const dollar = isDollar();
+  const labels = rows.map(r=>r.fy);
+  let run=0; const cum = rows.map(r=>{ run += dollar? r.awdD : r.awd; return run; });
+  document.getElementById('cumTitle').textContent = dollar? 'Cumulative dollars awarded' : 'Cumulative grants awarded';
+  const cfg = {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Cumulative awarded', data:cum, borderColor:C.scarletDeep, borderWidth:2.5,
+        fill:true, tension:.3, pointRadius:2.5, pointHoverRadius:5, pointBackgroundColor:'#fff', pointBorderColor:C.scarletDeep, pointBorderWidth:2,
+        backgroundColor:(ctx)=>{ const {ctx:c,chartArea:a}=ctx.chart; if(!a) return 'rgba(160,49,35,.10)';
+          const g=c.createLinearGradient(0,a.top,0,a.bottom); g.addColorStop(0,'rgba(160,49,35,.22)'); g.addColorStop(1,'rgba(160,49,35,.01)'); return g; } },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false},
+        tooltip:{ backgroundColor:'#191C22',padding:11,cornerRadius:9,
+          callbacks:{ label:c=>'  Total to date: '+(dollar? fmtUSDfull(c.parsed.y): fmtInt(c.parsed.y)) } } },
+      scales:{
+        x:{ grid:{display:false}, border:{color:C.line}, ticks:{color:C.inkSoft,font:{weight:'600'}} },
+        y:{ beginAtZero:true, grid:{color:'#EEF1F5'}, border:{display:false},
+          ticks:{ color:C.inkFaint, callback:v=> dollar? fmtUSD(v): fmtInt(v) } }
+      },
+      animation:{duration:520}
+    }
+  };
+  if(cumChart){cumChart.destroy();}
+  cumChart = new Chart(document.getElementById('cumChart'), cfg);
+}
+
+/* ============================ KPIs ============================ */
+function animateVal(el, target, fmt){
+  const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(reduce){ el.textContent = fmt(target); return; }
+  const dur=650, t0=performance.now();
+  function step(t){ const p=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-p,3);
+    el.textContent = fmt(target*e); if(p<1) requestAnimationFrame(step); else el.textContent=fmt(target); }
+  requestAnimationFrame(step);
+}
+
+function buildKPIs(){
+  const rows = sub();
+  const dollar = isDollar();
+  const tSub = rows.reduce((a,r)=>a+r.sub,0);
+  const tAwd = rows.reduce((a,r)=>a+r.awd,0);
+  const tReq = rows.reduce((a,r)=>a+r.reqD,0);
+  const tAwdD= rows.reduce((a,r)=>a+r.awdD,0);
+  const rangeLab = rows[0].fy+'–'+rows[rows.length-1].fy;
+
+  let cards;
+  if(!dollar){
+    cards = [
+      {cls:'sub', lab:'Proposals submitted', val:tSub, fmt:fmtInt, sub:rangeLab},
+      {cls:'awd', lab:'Grants awarded', val:tAwd, fmt:fmtInt, sub:rangeLab},
+      {cls:'rate',lab:'Overall award rate', val:tSub?tAwd/tSub:0, fmt:v=>(v*100).toFixed(1)+'%', sub:tAwd+' of '+tSub},
+      {cls:'sub', lab:'Peak year (submitted)', val:0, fmt:()=> peak(rows,'sub').fy, sub:peak(rows,'sub').sub+' proposals', raw:true},
+      {cls:'awd', lab:'Peak year (awarded)', val:0, fmt:()=> peak(rows,'awd').fy, sub:peak(rows,'awd').awd+' awards', raw:true},
+    ];
+  } else {
+    cards = [
+      {cls:'sub', lab:'Total requested', val:tReq, fmt:fmtUSD, sub:rangeLab, small:true},
+      {cls:'awd', lab:'Total awarded', val:tAwdD, fmt:fmtUSD, sub:rangeLab, small:true},
+      {cls:'rate',lab:'Funding success', val:tReq?tAwdD/tReq:0, fmt:v=>(v*100).toFixed(1)+'%', sub:fmtUSD(tAwdD)+' of '+fmtUSD(tReq)},
+      {cls:'sub', lab:'Largest ask', val:0, fmt:()=> peak(rows,'reqD').fy, sub:fmtUSD(peak(rows,'reqD').reqD), raw:true},
+      {cls:'awd', lab:'Largest award year', val:0, fmt:()=> peak(rows,'awdD').fy, sub:fmtUSD(peak(rows,'awdD').awdD), raw:true},
+    ];
+  }
+  const host = document.getElementById('kpis');
+  host.innerHTML = cards.map(c=>`
+    <div class="kpi ${c.cls}">
+      <span class="tick"></span>
+      <div class="k-lab">${c.lab}</div>
+      <div class="k-val ${c.small?'sm':''}" data-v></div>
+      <div class="k-sub">${c.sub}</div>
+    </div>`).join('');
+  host.querySelectorAll('.kpi').forEach((el,i)=>{
+    const c=cards[i], v=el.querySelector('[data-v]');
+    if(c.raw){ v.textContent = c.fmt(); }
+    else animateVal(v, c.val, c.fmt);
+  });
+}
+function peak(rows,key){ return rows.reduce((m,r)=> r[key]>m[key]?r:m, rows[0]); }
+
+/* ============================ TABLE ============================ */
+function buildTable(){
+  const rows = sub().map(r=>({ ...r, rate: r.sub? r.awd/r.sub:0, frate: r.reqD? r.awdD/r.reqD:0 }));
+  rows.sort((a,b)=>{
+    let x=a[state.sortKey], y=b[state.sortKey];
+    if(state.sortKey==='fy'){ x=DATA.findIndex(d=>d.fy===a.fy); y=DATA.findIndex(d=>d.fy===b.fy); }
+    return (x>y?1:x<y?-1:0)*state.sortDir;
+  });
+  const maxReq = Math.max(...rows.map(r=>r.reqD));
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = rows.map(r=>`
+    <tr class="${r.arpa?'arpa':''}">
+      <td>${r.fy}</td>
+      <td>${fmtInt(r.sub)}</td>
+      <td><b>${fmtInt(r.awd)}</b></td>
+      <td class="pct-cell">${(r.rate*100).toFixed(0)}%</td>
+      <td>${fmtUSDfull(r.reqD)}</td>
+      <td><b>${fmtUSDfull(r.awdD)}</b></td>
+      <td class="pct-cell">${(r.frate*100).toFixed(0)}%</td>
+    </tr>`).join('');
+
+  const all = sub();
+  const tSub=all.reduce((a,r)=>a+r.sub,0), tAwd=all.reduce((a,r)=>a+r.awd,0);
+  const tReq=all.reduce((a,r)=>a+r.reqD,0), tAwdD=all.reduce((a,r)=>a+r.awdD,0);
+  document.getElementById('tfoot').innerHTML = `
+    <tr>
+      <td>Total</td>
+      <td>${fmtInt(tSub)}</td>
+      <td>${fmtInt(tAwd)}</td>
+      <td>${tSub?((tAwd/tSub)*100).toFixed(0):0}%</td>
+      <td>${fmtUSDfull(tReq)}</td>
+      <td>${fmtUSDfull(tAwdD)}</td>
+      <td>${tReq?((tAwdD/tReq)*100).toFixed(0):0}%</td>
+    </tr>`;
+
+  // sort arrows
+  document.querySelectorAll('thead th').forEach(th=>{
+    const ar=th.querySelector('.ar'); if(ar) ar.remove();
+    if(th.dataset.key===state.sortKey){
+      const s=document.createElement('span'); s.className='ar';
+      s.innerHTML = state.sortDir>0?' &#9650;':' &#9660;'; th.appendChild(s);
+    }
+  });
+}
+
+/* ============================ RENDER ============================ */
+function renderAll(){
+  document.getElementById('mainTitle').textContent = isDollar()
+    ? 'Dollars requested vs. awarded' : 'Proposals submitted vs. awarded';
+  document.getElementById('lgSub').textContent = isDollar()?'Requested':'Submitted';
+  document.getElementById('logCtl').style.display = isDollar()?'flex':'none';
+  buildKPIs(); buildMain(); buildRate(); buildCum(); buildTable();
+}
+
+/* ============================ CONTROLS WIRING ============================ */
+function initFYSelects(){
+  const from=document.getElementById('fromFY'), to=document.getElementById('toFY');
+  DATA.forEach((d,i)=>{
+    from.insertAdjacentHTML('beforeend',`<option value="${i}">${d.fy}</option>`);
+    to.insertAdjacentHTML('beforeend',`<option value="${i}">${d.fy}</option>`);
+  });
+  from.value=state.from; to.value=state.to;
+  from.onchange=()=>{ state.from=+from.value; if(state.from>state.to){state.to=state.from; to.value=state.to;} renderAll(); };
+  to.onchange=()=>{ state.to=+to.value; if(state.to<state.from){state.from=state.to; from.value=state.from;} renderAll(); };
+}
+
+document.getElementById('mCount').onclick=()=>setMetric('count');
+document.getElementById('mDollar').onclick=()=>setMetric('dollar');
+function setMetric(m){
+  state.metric=m;
+  document.getElementById('mCount').setAttribute('aria-pressed', m==='count');
+  document.getElementById('mDollar').setAttribute('aria-pressed', m==='dollar');
+  renderAll();
+}
+
+document.getElementById('logScale').onchange=(e)=>{ state.log=e.target.checked; buildMain(); };
+
+// legend toggles for main chart
+document.querySelectorAll('#mainLegend .li').forEach(li=>{
+  li.onclick=()=>{ const i=+li.dataset.ds; state.hidden[i]=!state.hidden[i];
+    li.classList.toggle('off',state.hidden[i]); buildMain(); };
+});
+
+// table sorting
+document.querySelectorAll('thead th').forEach(th=>{
+  th.onclick=()=>{ const k=th.dataset.key;
+    if(state.sortKey===k) state.sortDir*=-1; else { state.sortKey=k; state.sortDir = (k==='fy')?1:-1; }
+    buildTable(); };
+});
+
+document.getElementById('resetBtn').onclick=()=>{
+  state.metric='count'; state.from=0; state.to=DATA.length-1; state.log=false;
+  state.hidden={0:false,1:false}; state.sortKey='fy'; state.sortDir=1;
+  document.getElementById('fromFY').value=0; document.getElementById('toFY').value=DATA.length-1;
+  document.getElementById('logScale').checked=false;
+  document.querySelectorAll('#mainLegend .li').forEach(li=>li.classList.remove('off'));
+  setMetric('count');
+};
+
+/* ============================ INIT ============================ */
+initFYSelects();
+renderAll();
+</script>
+</body>
+</html>
